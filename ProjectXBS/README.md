@@ -10,4 +10,13 @@
   > I don't restrict what you can do with XBS; push the limits if you want.
 ### Challenges to overcome
   > * The main challenge that I face is giving up, something that isn't good but I've done it before on things similar to this. I see hope for XBS, as I will allow myself to scrap parts of my code that are not good for workflow and are not easy to use/edit.
-  > * 
+  > * I will have to overcome many difficult tasks, like creating a succesful *parser*. There will be several generations of steps in creating this programming languages.
+### Bridge Documentation
+  > * There are no *bridge docs* yet, the programming language is not **finished**
+
+## Iterations:
+### Tokenizer
+  * Iteration 1: [x]
+### Parser
+  * Iteration 1: [x]
+  * Iteration 2: [ ]
