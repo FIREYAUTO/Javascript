@@ -16,7 +16,7 @@
 
 ## Iterations:
 ### Tokenizer
-  * Iteration 1: [x]
+  * Iteration 1: [x] 
 ### Parser
-  * Iteration 1: [x]
-  * Iteration 2: [ ]
+  * Iteration 1: [x] 
+  * Iteration 2: [ ] 
