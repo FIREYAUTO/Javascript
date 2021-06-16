@@ -25,6 +25,7 @@ $ //Toggle ToChar (When you use ".", it will determine whether or not it's a byt
 _ //Call the current fmem add value
 # //Toggle IsFloor (After a math operation, it will determine whether or not the result is set to the floor of the result)
 (<Any char>) //A proper comment which will prevent token parsing inside it
+"<@ or #> //Will set the value of the current mem add to either the current MemoryAddress (@) or the memory's length (#)
 
 Interprerter Written by FIREYAUTO
 
