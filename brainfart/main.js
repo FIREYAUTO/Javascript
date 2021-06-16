@@ -166,7 +166,8 @@ function InterpretLanguage(Code,Input=""){
         } else if (Raw!="]"){
             if (Raw=="="){
             	Skip.push(i+1);
-                for (let o=0;o<=Memory[MemoryAddress+1]-1;o++){
+		let nx = Memory[MemoryAddress+1]
+                for (let o=0;o<=nx-1;o++){
                 	Parse(i+1);
                 }
             } else {
