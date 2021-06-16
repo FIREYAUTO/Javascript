@@ -16,7 +16,9 @@
 
 ## Iterations:
 ### Tokenizer
-- [x] Iteration 1 
+- [x] Iteration 1: Write a tokenizer that will be used in the production workflow of XBS.
+- [ ] Iteration 2: Fix any issues that might arise in the tokenizer.
+- [ ] Iteration 3: Make the tokenizer a flexible, easy-to-use feature in the language. (Object-Orientation)
+- [ ] Iteration 4: Use the tokenizer in the steps that it is required in.
 ### Parser
-- [x] Iteration 1
-- [ ] Iteration 2
+- [ ] Iteration 1: Write a parser that will be used in the production workflow of XBS
