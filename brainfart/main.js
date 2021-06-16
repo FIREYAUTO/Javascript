@@ -35,7 +35,7 @@ const Program = ``;
 
 function InterpretLanguage(Code,Input=""){
 	Code=Code.replace(/\(.*\)/,"");
-	let CodeMatch="",CodeTokens = ["+","-","<",">",".",",","]","[","*","$","@",":",";","'","/","%","^","=","~","!","&","|","?","{","}","_","#"];
+	let CodeMatch="",CodeTokens = ["+","-","<",">",".",",","]","[","*","$","@",":",";","'","/","%","^","=","~","!","&","|","?","{","}","_","#","\""];
     for (let k in CodeTokens){let v = CodeTokens[k];CodeMatch += `\\${v}`}
     const Memory = new Proxy([],{
     	get:function(self,Name){
@@ -169,6 +169,14 @@ function InterpretLanguage(Code,Input=""){
 		let nx = Memory[MemoryAddress+1]
                 for (let o=0;o<=nx-1;o++){
                 	Parse(i+1);
+                }
+	    } else if (Raw == "\""){
+            	Skip.push(i+1);
+                let nx = Code.substr(i+1,1);
+                if (nx == "#"){
+                	Memory[MemoryAddress]=Memory.length-1;
+                } else if (nx == "@"){
+                	Memory[MemoryAddress]=MemoryAddress;
                 }
             } else {
             	let t=Tokens[Raw];
