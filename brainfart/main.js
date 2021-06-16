@@ -81,11 +81,33 @@ function InterpretLanguage(Code,Input=""){
             	while(Memory[MemoryAddress]!=0){
                 	let ii=i+1,o=false;
                     let r=Code.substr(ii,1);
+                    let fskip=[];
                     do {
-                    	if (r=="*" && Memory[MemoryAddress]==0){o=true}
-                        Skip.push(ii);
-                        if (!o){Parse(ii)};
-                        ii++,r=Code.substr(ii,1);
+                    	if (fskip.includes(ii)){
+                        	let c = Code.substr(ii);
+                            Skip.push(ii);
+                        	ii++,r=Code.substr(ii,1);
+                            if (r == "]"){
+                            	ii++,r=Code.substr(ii,1);
+                            }
+                        } else {
+                        	if (r=="["){
+                        		let x=ii+1,op=1;
+                    			let xr=Code.substr(x,1);
+                    			while(op>=1){
+                    				if (xr=="["){op++}
+                        			if (xr=="]"){op--}
+                        			if (op<1){break}
+                        			fskip.push(x);
+                        			x++,xr=Code.substr(x,1);
+                    			}
+                                fskip.push(x);
+                        	}
+                    		if (r=="*" && Memory[MemoryAddress]==0){o=true}
+                        	Skip.push(ii);
+                        	if (!o){Parse(ii)};
+                        	ii++,r=Code.substr(ii,1);
+                        }
                     } while (r!="]");
                 }
             } else {
@@ -153,4 +175,4 @@ function InterpretLanguage(Code,Input=""){
     }
 }
 
-InterpretLanguage("@+++>++<:.")
+InterpretLanguage(`>+[>,*.<<[-]+++++++++++++$.$>]`,"Hello, world!")
