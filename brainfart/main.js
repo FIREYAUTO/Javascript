@@ -24,12 +24,17 @@ $ //Toggle ToChar (When you use ".", it will determine whether or not it's a byt
 } //Close a function block
 _ //Call the current fmem add value
 # //Toggle IsFloor (After a math operation, it will determine whether or not the result is set to the floor of the result)
+(<Any char>) //A proper comment which will prevent token parsing inside it
 
 Interprerter Written by FIREYAUTO
 
 */
 
+const ProgramInput = "";
+const Program = ``;
+
 function InterpretLanguage(Code,Input=""){
+	Code=Code.replace(/\(.*\)/,"");
 	let CodeMatch="",CodeTokens = ["+","-","<",">",".",",","]","[","*","$","@",":",";","'","/","%","^","=","~","!","&","|","?","{","}","_","#"];
     for (let k in CodeTokens){let v = CodeTokens[k];CodeMatch += `\\${v}`}
     const Memory = new Proxy([],{
@@ -175,4 +180,4 @@ function InterpretLanguage(Code,Input=""){
     }
 }
 
-InterpretLanguage(`>+[>,*.<<[-]+++++++++++++$.$>]`,"Hello, world!")
+InterpretLanguage(Program,ProgramInput);
