@@ -5,3 +5,26 @@
 @${>~++<[>>+<<-]>[<+>-]>[<+>-]<<^}+++>++<^-[>>+<<->+<]>[<+>-]<+>>[<+>-]<<'.~++>+++++<'>++<^+.+++++++..+++.~+++++_.~+++>++<^>++<^>++++++<:.~++>+++++<'>++<^+>++>+++++<'<:.+++.>++>+++<'<;.>+++_<;.~+++++_>+<:. ("Hello World!" in brainfart, first creation of "Hello World!")
 
 @++>+++++<^>+[>,*.<<$.$>] (Prints all bytes in the input followed by 1 space)
+
+(JumpBackToAddress function)
+
++++++
+>
+++++
+>
++++
+>
+{ (JumpBackToAddress function)
+    >~"@ (Current memory position)
+    < (Jump back to parameter)
+    [
+    	>>+<<- (Clone parameter to infront of memory position variable)
+    ]
+    > (Jump to memory position variable)
+    @ (Enable IsStrict)
+    ; (Subtract MemoryPosition by parameter)
+    @ (Disable IsStrict)
+    < (Go back to previous parameter)
+    =< (Loop the "<" token so we reach the memory position we want)
+}
+++_. (Output should be 4, since we are going to the second memory address)
