@@ -36,6 +36,7 @@ const Program = ``;
 
 function InterpretLanguage(Code,Input=""){
 	Code=Code.replace(/\(.*\)/g,"");
+    const MaxMemorySize = 3000
 	let CodeMatch="",CodeTokens = ["+","-","<",">",".",",","]","[","*","$","@",":",";","'","/","%","^","=","~","!","&","|","?","{","}","_","#","\""];
     for (let k in CodeTokens){let v = CodeTokens[k];CodeMatch += `\\${v}`}
     let Memory = new Proxy([],{
@@ -43,12 +44,14 @@ function InterpretLanguage(Code,Input=""){
         	let Value = Reflect.get(self,Name);
         	if (Value == undefined){
             	Reflect.set(self,Name,0);
+                if (self.length > MaxMemorySize){throw Error(`Memory reached limit of ${MaxMemorySize} addresses`)}
                 return 0;
             }
             return Value
         },
         set:function(self,Name,Value){
         	Reflect.set(self,Name,Value);
+            if (self.length > MaxMemorySize){throw Error(`Memory reached limit of ${MaxMemorySize} addresses`)}
         }
     });
     let MemoryAddress=0,MatchExpression=`[^${CodeMatch}]`,ReadInt=0,ToChar=false,IsStrict=false,FMemory=[],FMAdd=0,IsFloor=true;
