@@ -35,10 +35,10 @@ const ProgramInput = "";
 const Program = ``;
 
 function InterpretLanguage(Code,Input=""){
-	Code=Code.replace(/\(.*\)/,"");
+	Code=Code.replace(/\(.*\)/g,"");
 	let CodeMatch="",CodeTokens = ["+","-","<",">",".",",","]","[","*","$","@",":",";","'","/","%","^","=","~","!","&","|","?","{","}","_","#","\""];
     for (let k in CodeTokens){let v = CodeTokens[k];CodeMatch += `\\${v}`}
-    const Memory = new Proxy([],{
+    let Memory = new Proxy([],{
     	get:function(self,Name){
         	let Value = Reflect.get(self,Name);
         	if (Value == undefined){
@@ -111,7 +111,11 @@ function InterpretLanguage(Code,Input=""){
                         	}
                     		if (r=="*" && Memory[MemoryAddress]==0){o=true}
                         	Skip.push(ii);
-                        	if (!o){Parse(ii)};
+                        	if (!o){
+                            	if (Code.substr(ii-1,1)!="\""&&Code.substr(ii-1,1)!="?"&&Code.substr(ii-1,1)!="="){
+                    				Parse(ii);
+                    			}
+                            };
                         	ii++,r=Code.substr(ii,1);
                         }
                     } while (r!="]");
@@ -161,24 +165,28 @@ function InterpretLanguage(Code,Input=""){
                             xi++,xr=Code.substr(xi,1);
                         }
                     }
-                    Parse(o);
+                    if (Code.substr(o-1,1)!="\""&&Code.substr(o-1,1)!="?"&&Code.substr(o-1,1)!="="){
+                    	Parse(o);
+                    }
                 }
 			}
         } else if (Raw!="]"){
             if (Raw=="="){
             	Skip.push(i+1);
-		let nx = Memory[MemoryAddress+1]
+                let nx = Memory[MemoryAddress+1];
                 for (let o=0;o<=nx-1;o++){
                 	Parse(i+1);
                 }
-	    } else if (Raw == "\""){
-            	Skip.push(i+1);
+            } else if (Raw == "\""){
                 let nx = Code.substr(i+1,1);
                 if (nx == "#"){
-                	Memory[MemoryAddress]=Memory.length-1;
+                	Skip.push(i+1);
+                	Memory[MemoryAddress]=Memory.length;
                 } else if (nx == "@"){
+                	Skip.push(i+1);
                 	Memory[MemoryAddress]=MemoryAddress;
                 }
+                return
             } else {
             	let t=Tokens[Raw];
                 if (t){t()}
@@ -186,8 +194,11 @@ function InterpretLanguage(Code,Input=""){
         }
     }
     for (let i=0;i<=Code.length-1;i++){
+    	i=+i
     	if (!Skip.includes(i)){Parse(i);p=i}
     }
+    Memory=[];
+    FMemory=[];
 }
 
 InterpretLanguage(Program,ProgramInput);
