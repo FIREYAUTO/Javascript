@@ -28,3 +28,5 @@
     =< (Loop the "<" token so we reach the memory position we want)
 }
 ++_. (Output should be 4, since we are going to the second memory address)
+
++>++>+++>++++{~>}?+{>~<<}?+{>"@-<=<>"#<?-?-=_?+?+>"#--<?-=_?+}_ (Clear entire memory then jump back to first memory address)
