@@ -152,11 +152,16 @@ function InterpretLanguage(Code,Input=""){
         } else if (Raw=="_"){
         	let f=FMemory[FMAdd],c=FMAdd;
             if (f){
-            	let fskip=[];
+            	let fskip=[],sk=false;
                 for (let o=f[0];o<=f[1];o++){
+                	if (sk){continue}
                 	if (fskip.includes(o)){continue}
                     if (Code.substr(o,1)=="_" && FMAdd==c){continue}
                     let r = Code.substr(o,1);
+                    if (r == "*" && Memory[MemoryAddress]==0){
+                    	sk=true;
+                        continue;
+                    }
                     if (r == "["){
                     	let oo=1,xi=o+1;
                         let xr = Code.substr(xi,1);
@@ -200,6 +205,12 @@ function InterpretLanguage(Code,Input=""){
     	i=+i
     	if (!Skip.includes(i)){Parse(i);p=i}
     }
+    /*
+    for (let k in Memory){
+    	let v = Memory[k];
+        document.write(`<br>${k}: ${v}`);
+    }
+    */
     Memory=[];
     FMemory=[];
 }
