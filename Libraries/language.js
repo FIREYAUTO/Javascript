@@ -4,7 +4,6 @@ Programmed by FIREYAUTO
 This is a library that makes it easier to create a programming language written in js.
 There is currently no documentation.
 */
-
 //{{ Backend Classes }}\\
 
 //LanguageTokenBase -> Default Token
@@ -115,10 +114,11 @@ class LanguageTree {
 	constructor(Language,Tokens=[]){
     	this._language = Language;
         this._rawTokens = Tokens;
-        this._result = new LanguageASTBlock(this);
         this._position=0;
         this._cToken = Tokens[0];
         this._chunks = [];
+        this.vars = {};
+        this._result = new LanguageASTBlock(this,this.vars);
         this._chunk = this._result;
     }
     setType(t){
@@ -134,7 +134,7 @@ class LanguageTree {
     }
     openChunk(){
     	this._chunks.push(this._chunk);
-        this._chunk = new LanguageASTBlock(this);
+        this._chunk = new LanguageASTBlock(this,this.vars);
     }
     closeChunk(){
     	if(this._chunks.length>0){
@@ -147,10 +147,10 @@ class LanguageTree {
     	this._chunk.write(x);
     }
     astNode(){
-    	return new LanguageASTNode(this);
+    	return new LanguageASTNode(this,this.vars);
     }
     astBlock(){
-    	return new LanguageASTBlock(this);
+    	return new LanguageASTBlock(this,this.vars);
     }
     isEnd(){
     	return this._position>this._rawTokens.length-1;
@@ -161,13 +161,29 @@ class LanguageTree {
 }
 
 class LanguageAST {
-	constructor(type,parent){
+	constructor(type,parent,vars){
         this._type = type;
         this.stream = parent;
         this._readInners = false;
         this._innerNames = [];
         this.type = "ast";
         this.interpret = undefined;
+        let a = this;
+        this.vars = new Proxy({},{
+        	set:function(self,n,v){
+            	self[n]=v;
+            },
+            get:function(self,n){
+            	if(Object.prototype.hasOwnProperty.call(self,n)){
+                	return self[n];
+                }
+                if(a.parent){
+                	return a.parent.vars[n];
+                }else if(a.stream){
+                	return a.stream.vars[n];
+                }
+            }
+        });
     }
     readInners(bool){
     	this._readInners=!!bool;
@@ -197,8 +213,8 @@ LanguageAST.prototype.toString = function(){
 }
 
 class LanguageASTBlock extends LanguageAST {
-	constructor(p){
-    	super("LanguageASTBlock",p);
+	constructor(p,v){
+    	super("LanguageASTBlock",p,v);
     	this._tree = [];
     }
     write(x){
@@ -213,8 +229,8 @@ class LanguageASTBlock extends LanguageAST {
 }
 
 class LanguageASTNode extends LanguageAST {
-	constructor(p){
-    	super("LanguageASTNode",p);
+	constructor(p,v){
+    	super("LanguageASTNode",p,v);
         this._tree = {};
     }
     write(n,x){
@@ -232,6 +248,7 @@ class LanguageReader {
         this._cToken = tokens[0];
         this._position = 0;
         this._result = {};
+        this.vars = {};
     }
     next(amount=1){
     	this._position+=amount;
@@ -272,7 +289,7 @@ class Language {
     }
     //{{ Backend Methods }}\\
     _escape(x){
-    	return x.replace(/(\<|\>|\*|\(|\)|\{|\}|\[|\]|\||\=|\?|\&|\^|\$|\\|\-|\+)/g,"\\$&");
+    	return x.replace(/(\<|\>|\*|\(|\)|\{|\}|\[|\]|\||\=|\?|\&|\^|\$|\\|\-|\+|\.|\'|\")/g,"\\$&");
     }
     _error(type,message){
     	throw new LanguageError(message,type);
@@ -483,34 +500,59 @@ class Language {
         	this.parseChunk(stream);
             stream.next();
         }
-        return stream._result;
+        return stream;
     }
     //{{ Interpret Method }}\\
     interpretMethod(type,callback){
     	this._astInterpreters[type]=callback;
     }
-    interpret(tree,parent){
+    interpret(tree,parent,astr){
     	if(tree instanceof LanguageASTNode){
         	let reader = this._getAstInterpreter(tree);
             if (reader){
-            	return reader(tree.stream,tree);
+            	if(parent){
+                	tree.mainstream=parent;
+                }
+            	let r = reader(tree.mainstream,tree);
+                if(tree.mainstream){
+                	tree.mainstream.write("_res",r);
+                }else{
+                	document.write(tree);
+                }
+            	return r;
             }
             return
         }else if(!(tree instanceof LanguageASTBlock)){
         	return tree;
         }
     	let stream = new LanguageReader(this,tree._tree);
+        if(!parent&&astr){
+        	if(l.globals){
+            	for(let k in l.globals){
+                	let v = l.globals[k];
+                    astr.vars[k]=v;
+                }
+            }
+        	stream.vars=astr.vars;
+        }else{
+        	stream.vars=tree.vars;
+        }
         stream.parent = parent;
+        tree.mainstream = stream;
         while(!stream.isEnd()){
         	let t = stream.token();
             let reader = this._getAstInterpreter(t);
-            if(reader){
-            	reader(stream,t);
+            if(reader&&t){
+            	t.mainstream=stream;
+                t.vars=stream.vars;
+            	let r = reader(stream,t);
+                stream.write("_res",r);
             }else if(t instanceof LanguageASTBlock){
-            	this.interpret(t,stream);
+            	let r = this.interpret(t,stream);
+                stream.write("_res",r.read("_res"));
             }
         	stream.next();
         }
-        return stream._result;
+        return stream;
     }
 }
