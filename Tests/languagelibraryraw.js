@@ -527,8 +527,14 @@ class Language {
                 }
             	return r;
             }
+            if(parent){
+            	parent.write("_res",undefined);
+            }
             return
         }else if(!(tree instanceof LanguageASTBlock)){
+        	if(parent){
+            	parent.write("_res",tree);
+            }
         	return tree;
         }
     	let stream = new LanguageReader(this,tree._tree);
@@ -555,10 +561,15 @@ class Language {
                 t.vars=stream.vars;
                 t.rawvars=stream.rawvars;
             	let r = reader(stream,t);
+                if (r instanceof LanguageReader){
+                	r = r.read("_res");
+               	}
                 stream.write("_res",r);
             }else if(t instanceof LanguageASTBlock){
             	let r = this.interpret(t,stream);
                 stream.write("_res",r.read("_res"));
+            }else{
+            	stream.write("_res",t);
             }
         	stream.next();
         }
@@ -600,6 +611,8 @@ l.newTokens(
     Language.token("mod","%",l.types.Operator),
     Language.token("eq","=",l.types.Operator),
     Language.token("prime","'",l.types.Operator),
+    Language.token("inc","++",l.types.Operator),
+    Language.token("deinc","--",l.types.Operator),
     
     Language.token("eqs","==",l.types.Operator),
     Language.token("geq",">=",l.types.Operator),
@@ -611,11 +624,13 @@ l.newTokens(
     Language.token("and","&",l.types.Operator),
     Language.token("or","|",l.types.Operator),
     Language.token("len","#",l.types.Operator),
+    
     //{{ Keyword Tokens }}\\
     Language.token("func","fn",l.types.Keyword),
     Language.token("each","each",l.types.Keyword),
 	Language.token("newvar","new",l.types.Keyword),
-    Language.token("loop","loop",l.types.Keyword)
+    Language.token("loop","loop",l.types.Keyword),
+   	Language.token("iterate","iterate",l.types.Keyword)
 );
 l.defaultType = "Identifier";
 l.setTokenizerFinish((stream,tokens)=>{
@@ -846,7 +861,7 @@ l.complexExps = {
         },
     },
     "eqs":{
-    	priority:75,
+    	priority:19.9,
         call:(stream,value,p)=>{
         	stream.next(2);
             let exp = l.parseExpression(stream,stream.token(),p);
@@ -858,7 +873,7 @@ l.complexExps = {
         }
     },
     "leq":{
-    	priority:75,
+    	priority:19.9,
         call:(stream,value,p)=>{
         	stream.next(2);
             let exp = l.parseExpression(stream,stream.token(),p);
@@ -870,7 +885,7 @@ l.complexExps = {
         }
     },
     "geq":{
-    	priority:75,
+    	priority:19.9,
         call:(stream,value,p)=>{
         	stream.next(2);
             let exp = l.parseExpression(stream,stream.token(),p);
@@ -882,7 +897,7 @@ l.complexExps = {
         }
     },
     "gt":{
-    	priority:75,
+    	priority:19.9,
         call:(stream,value,p)=>{
         	stream.next(2);
             let exp = l.parseExpression(stream,stream.token(),p);
@@ -894,7 +909,7 @@ l.complexExps = {
         }
     },
     "lt":{
-    	priority:75,
+    	priority:19.9,
         call:(stream,value,p)=>{
         	stream.next(2);
             let exp = l.parseExpression(stream,stream.token(),p);
@@ -906,7 +921,7 @@ l.complexExps = {
         }
     },
     "neq":{
-    	priority:75,
+    	priority:19.9,
         call:(stream,value,p)=>{
         	stream.next(2);
             let exp = l.parseExpression(stream,stream.token(),p);
@@ -918,7 +933,7 @@ l.complexExps = {
         }
     },
     "and":{
-    	priority:74,
+    	priority:19.8,
         call:(stream,value,p)=>{
         	stream.next(2);
             let exp = l.parseExpression(stream,stream.token(),p);
@@ -930,7 +945,7 @@ l.complexExps = {
         }
     },
     "or":{
-    	priority:74,
+    	priority:19.8,
         call:(stream,value,p)=>{
         	stream.next(2);
             let exp = l.parseExpression(stream,stream.token(),p);
@@ -940,6 +955,26 @@ l.complexExps = {
             node.write("v2",exp);
             return l.exp(node,p);
         }
+    },
+    "inc":{
+    	priority:110,
+        call:(stream,value,p)=>{
+        	stream.next();
+        	let result = stream.astNode();
+            result.type="inc";
+            result.write("v1",value);
+            return l.exp(result,-1);
+        },
+    },
+    "deinc":{
+    	priority:110,
+        call:(stream,value,p)=>{
+        	stream.next();
+        	let result = stream.astNode();
+            result.type="deinc";
+            result.write("v1",value);
+            return l.exp(result,-1);
+        },
     },
 }
 l.parseComplexExpression = function(stream,value){
@@ -968,6 +1003,7 @@ l.codeBlock = function(stream,token){
 	if(l.eq(token,l.getToken("bopen"))){
     	let block = stream.astBlock();
         let close = l.getToken("bclose");
+        stream.next();
         while(!stream.isEnd()&&!l.eq(stream.token(),close)){
         	let t = stream.token();
            	block.write(l.parseExpression(stream,t,-1));
@@ -1108,6 +1144,19 @@ l.parseExpression = function(stream,token,priority=-1,nocomma=false){
             b.write("vars",vars);
             b.write("body",body);
             return b;
+        }else if(l.eq(token,l.getToken("iterate"))){
+        	stream.next();
+            let b = stream.astNode();
+            b.type = "iterate";
+            let iter = l.parseExpression(stream,stream.token(),undefined,true);
+            b.write("iter",iter);
+            stream.next();
+            let vars = l.identifierList(stream);
+            stream.next();
+            let body = l.codeBlock(stream,stream.token());
+            b.write("vars",vars);
+            b.write("body",body);
+            return b;
         }else if(l.eq(token,l.getToken("loop"))){
         	stream.next();
             let b = stream.astNode();
@@ -1161,7 +1210,7 @@ l.parseExpression = function(stream,token,priority=-1,nocomma=false){
     	let r = stream.astNode();
         r.type = "len";
         stream.next();
-        r.write("v1",l.parseExpression(stream,stream.token(),75,true));
+        r.write("v1",l.parseExpression(stream,stream.token(),73,true));
         result = r;
     }
     if(!nocomma&&priority==-1){
@@ -1339,7 +1388,9 @@ l.interpretMethod("func",(stream,token)=>{
 });
 l.interpretMethod("commaexp",(stream,token)=>{
 	token=token||stream.token();
-    return l.interpret(token,stream).read("_res");
+    let r = l.interpret(token,stream).read("_res");
+    console.log(r);
+    return r
 });
 l.interpretMethod("range",(stream,token)=>{
 	token=token||stream.token();
@@ -1375,6 +1426,7 @@ l.interpretMethod("setvalue",(stream,token)=>{
     o[i]=v2;
     return o[i];
 });
+
 l.interpretMethod("list",(stream,token)=>{
 	token=token||stream.token();
     let list = [];
@@ -1442,16 +1494,20 @@ l.interpretMethod("and",(stream,t)=>{
     	let v2 = l.interpret(t.read("v2"),stream);
     	return v1&&v2;
     }
-    return v1;
+    return 0;
 });
 l.interpretMethod("or",(stream,t)=>{
 	t = t||stream.token();
     let v1 = l.interpret(t.read("v1"),stream);
-    if(!v1){
+    if(v1){
+    	return v1;
+    }else{
     	let v2 = l.interpret(t.read("v2"),stream);
+        if(v2){
+        	return v2;
+        }
     	return v1||v2;
     }
-    return v1;
 });
 l.interpretMethod("each",(stream,t)=>{
 	t=t||stream.token();
@@ -1462,6 +1518,20 @@ l.interpretMethod("each",(stream,t)=>{
     	let vs=[i+1,iter[i]];
         for(let k in vs){
             body.rawvars[vars[k]]=vs[k];
+        }
+        l.interpret(body,stream);
+    }
+});
+l.interpretMethod("iterate",(stream,t)=>{
+	t=t||stream.token();
+    let iter = l.interpret(t.read("iter"),stream);
+    let vars = t.read("vars");
+    let body = t.read("body");
+    for(let _k in iter){
+    	let _v = iter[_k];
+        let vs=[_k,_v];
+       	for(let k in vs){
+        	body.rawvars[vars[k]]=vs[k];
         }
         l.interpret(body,stream);
     }
@@ -1601,6 +1671,48 @@ l.interpretMethod("len",(stream,t)=>{
     let v = l.interpret(t.read("v1"),stream);
     return v.length;
 });
+l.interpretMethod("inc",(stream,t)=>{
+	t=t||stream.token();
+   	let v1 = t.read("v1");
+    if(!["index","getvar"].includes(v1.type)){
+    	console.log(v1);
+    	throw new Error(`You can only increment variables or indexes in lists!`);
+    }
+    if(v1.type=="index"){
+    	let o = l.interpret(v1.read("v1"),stream);
+        let i = l.interpret(v1.read("v2"),stream);
+        if(typeof i=="number"){
+        	i--;
+        }
+        o[i]++;
+        return o[i];
+    }else if(v1.type=="getvar"){
+    	let n = v1.read("name");
+    	stream.vars[n]++
+        return stream.vars[n];
+    }
+});
+l.interpretMethod("deinc",(stream,t)=>{
+	t=t||stream.token();
+   	let v1 = t.read("v1");
+    if(!["index","getvar"].includes(v1.type)){
+    	console.log(v1);
+    	throw new Error(`You can only increment variables or indexes in lists!`);
+    }
+    if(v1.type=="index"){
+    	let o = l.interpret(v1.read("v1"),stream);
+        let i = l.interpret(v1.read("v2"),stream);
+        if(typeof i=="number"){
+        	i--;
+        }
+        o[i]--;
+        return o[i];
+    }else if(v1.type=="getvar"){
+    	let n = v1.read("name");
+    	stream.vars[n]--;
+        return stream.vars[n];
+    }
+});
 
 l.globals = {
 	sin:Math.sin,
@@ -1627,7 +1739,9 @@ l.globals = {
 };
 
 let t = l.tokenize(`
-
+x = [2]
+log(x[1]);
+x[1]++;
 `);
 let a = l.ast(t);
 let i = l.interpret(a._result,undefined,a);
