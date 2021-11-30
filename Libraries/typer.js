@@ -66,7 +66,7 @@ class Typer {
     }
     KeyDown(Input){
     	this._FireHook("KeyDown",Input);
-        if(Input.Options.Prevented===true){return}
+        if(Input.Event.defaultPrevented||Input.Options.Prevented===true){return}
         let Text = this.Element.value||this.Element.innerHTML;
         if(this.AdjacentReciever){
         	Text = this.AdjacentReciever(this,Text);
@@ -86,7 +86,7 @@ class Typer {
     }
     KeyUp(Input){
     	this._FireHook("KeyUp",Input);
-        if(Input.Options.Prevented===true){return}
+        if(Input.Event.defaultPrevented||Input.Options.Prevented===true){return}
         Input.PreventDefault();
     }
     NewHook(Type,Callback){
