@@ -21,7 +21,9 @@ class PseudoProxy {
                     	return Property.Value;
                     }
                 }else{
-                	return PProxy.FallbackObject[Name];
+			let Value = PProxy.FallbackObject[Name];
+			if(typeof Value=="function")Value=Value.bind(PProxy.FallbackObject);
+                	return Value;
                 }
             },
             set:function(self,Name,Value){
