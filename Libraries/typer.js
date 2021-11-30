@@ -53,9 +53,11 @@ class Typer {
         this.AdjacentReciever = undefined;
         Element.addEventListener("keydown",Event=>{
         	this.KeyDown(InputObjectInformal(Event));
+		this._FireFinishHook("KeyDown");
         });
         Element.addEventListener("keyup",Event=>{
         	this.KeyUp(InputObjectInformal(Event));
+		this._FireFinishHook("KeyUp");
         });
     }
     _FireHook(Type,...Arguments){
@@ -93,14 +95,12 @@ class Typer {
         		this.Element.innerHTML=Text;
         	}
             Input.PreventDefault();
-        }
-	this._FireFinishHook("KeyDown");
+	}
     }
     KeyUp(Input){
     	this._FireHook("KeyUp",Input);
         if(Input.Event.defaultPrevented||Input.Options.Prevented===true){return}
         Input.PreventDefault();
-	this._FireFinishHook("KeyUp");
     }
     NewHook(Type,Callback){
     	if(this.Hooks.hasOwnProperty(Type)){
