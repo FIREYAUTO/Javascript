@@ -18,7 +18,9 @@ class PseudoProxy {
                     if(Property.OnGet){
                     	return Property.OnGet(PProxy);
                     }else{
-                    	return Property.Value;
+                    	let Value = Property.Value;
+			if(typeof Value=="function")Value=Value.bind(PProxy);
+                	return Value;
                     }
                 }else{
 			let Value = PProxy.FallbackObject[Name];
