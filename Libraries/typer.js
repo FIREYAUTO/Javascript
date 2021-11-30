@@ -46,6 +46,10 @@ class Typer {
         	KeyDown:[],
             KeyUp:[],
         };
+	this.FinishHooks={
+		KeyDown:[],
+		KeyUp:[],
+	};
         this.AdjacentReciever = undefined;
         Element.addEventListener("keydown",Event=>{
         	this.KeyDown(InputObjectInformal(Event));
@@ -57,6 +61,13 @@ class Typer {
     _FireHook(Type,...Arguments){
     	if(this.Hooks.hasOwnProperty(Type)){
         	for(let Callback of this.Hooks[Type]){
+            	Callback(...Arguments);
+            }
+        }
+    }
+    _FireFinishHook(Type,...Arguments){
+    	if(this.FinishHooks.hasOwnProperty(Type)){
+        	for(let Callback of this.FinishHooks[Type]){
             	Callback(...Arguments);
             }
         }
@@ -83,15 +94,22 @@ class Typer {
         	}
             Input.PreventDefault();
         }
+	this._FireFinishHook("KeyDown");
     }
     KeyUp(Input){
     	this._FireHook("KeyUp",Input);
         if(Input.Event.defaultPrevented||Input.Options.Prevented===true){return}
         Input.PreventDefault();
+	this._FireFinishHook("KeyUp");
     }
     NewHook(Type,Callback){
     	if(this.Hooks.hasOwnProperty(Type)){
         	this.Hooks[Type].push(Callback);
+        }
+    }
+    NewFinishHook(Type,Callback){
+    	if(this.FinishHooks.hasOwnProperty(Type)){
+        	this.FinishHooks[Type].push(Callback);
         }
     }
 }
